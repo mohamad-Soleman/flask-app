@@ -25,7 +25,7 @@ def register_user():
     if user is not None:
         return jsonify({"error": "User already exists"}), 409
 
-    new_user = User(username=data.get("username"), email=data.get("email"),isAdmin=data.get("isAdmin"))
+    new_user = User(username=data.get("username"), email=data.get("email"),isAdmin=data.get("isAdmin"),isActive=True,createdBy=current_user.username)
 
     new_user.set_id()
     new_user.set_password(password=data.get("password"))
