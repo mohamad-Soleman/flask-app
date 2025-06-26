@@ -5,6 +5,7 @@ from orders import order_bp
 from users import user_bp
 from models import User, TokenBlocklist, generate_uuid
 from flask_cors import CORS
+import os
 
 
 def create_app():
@@ -21,7 +22,8 @@ def create_app():
         db.create_all()
         # Create default admin user if not exists
         if not User.query.filter_by(username='admin').first():
-            admin = User(username='admin',email="mohamad.soleman.2016@gmail.com" ,isAdmin=True,isActive=True,createdBy="admin")
+            admin = User(username='admin', email="mohamad.soleman.2016@gmail.com", isAdmin=True, isActive=True,
+                         createdBy="admin")
             admin.set_id()
             admin.set_password('moha506090')
             admin.save()
@@ -33,6 +35,11 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(user_bp, url_prefix="/users")
     app.register_blueprint(order_bp, url_prefix="/orders")
+
+    # Add a root route
+    @app.route('/')
+    def home():
+        return jsonify({"message": "Flask API is running", "status": "success"})
 
     # load user
     @jwt.user_lookup_loader
@@ -75,9 +82,9 @@ def create_app():
             ),
             401,
         )
-    
+
     @jwt.token_in_blocklist_loader
-    def token_in_blocklist_callback(jwt_header,jwt_data):
+    def token_in_blocklist_callback(jwt_header, jwt_data):
         jti = jwt_data['jti']
 
         token = db.session.query(TokenBlocklist).filter(TokenBlocklist.jti == jti).scalar()
@@ -85,3 +92,10 @@ def create_app():
         return token is not None
 
     return app
+
+app = create_app()
+
+# This is only for development - Gunicorn will use the app variable above
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
