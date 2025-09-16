@@ -10,9 +10,23 @@ import os
 
 def create_app():
     app = Flask(__name__)
-    CORS(app)
+    
+    # Configure CORS to allow credentials (cookies) with more permissive settings for development
+    CORS(app,
+         supports_credentials=True,
+         origins=['http://localhost:4200', 'http://127.0.0.1:4200', 'https://flourishing-sherbet-79ac5a.netlify.app'],
+         allow_headers=['Content-Type', 'Authorization'],
+         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 
     app.config.from_prefixed_env()
+    
+    # Configure JWT to read tokens from cookies AND headers (fallback)
+    app.config['JWT_TOKEN_LOCATION'] = ['cookies', 'headers']
+    app.config['JWT_COOKIE_CSRF_PROTECT'] = False  # Disable CSRF for simplicity
+    app.config['JWT_ACCESS_COOKIE_NAME'] = 'access_token'
+    app.config['JWT_REFRESH_COOKIE_NAME'] = 'refresh_token'
+    app.config['JWT_HEADER_NAME'] = 'Authorization'
+    app.config['JWT_HEADER_TYPE'] = 'Bearer'
 
     # initialize exts
     db.init_app(app)
