@@ -57,7 +57,7 @@ def login_user():
         response.set_cookie(
             'access_token',
             access_token,
-            max_age=timedelta(minutes=1),
+            max_age=timedelta(hours=1),
             httponly=True,
             secure=is_production,  # Use HTTPS only in production
             samesite='None' if is_production else 'Lax'  # Cross-origin for production
@@ -120,7 +120,7 @@ def refresh_access():
         'access_token',
         new_access_token,
         # max_age=timedelta(hours=1),
-        max_age=timedelta(minutes=1),
+        max_age=timedelta(hours=1),
         httponly=True,
         secure=is_production,
         samesite='None' if is_production else 'Lax'
