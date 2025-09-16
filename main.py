@@ -49,11 +49,17 @@ def create_app():
 
         # Create default categories if not exists
         default_categories = [
-            'חתונה',
-            'אירוסין',
-            'יום הולדת'
+            'סוגי אירועים',
+            'سلطات',
+            'سلطات موسمية',
+            'سلطات اكسترا',
+            'وجبات اولى ساخنة',
+            'وجبات مميزة',
+            'وجبات اولية',
+            'وجبات رئيسية',
+            'وجبات رئيسية مميزة',
         ]
-        
+
         for category_name in default_categories:
             if not Categories.get_by_name(category_name):
                 category = Categories(
@@ -69,12 +75,11 @@ def create_app():
 
         # Create default sub-categories if not exists
         default_sub_categories = [
-            {'name': 'חתונה אשכנזית', 'parent': 'חתונה'},
-            {'name': 'חתונה ספרדית', 'parent': 'חתונה'},
-            {'name': 'אירוסין פשוטים', 'parent': 'אירוסין'},
-            {'name': 'אירוסין מפוארים', 'parent': 'אירוסין'},
-            {'name': 'יום הולדת ילדים', 'parent': 'יום הולדת'},
-            {'name': 'יום הולדת מבוגרים', 'parent': 'יום הולדת'}
+            {'name': 'חתונה', 'parent': 'סוגי אירועים'},
+            {'name': 'אירוסין', 'parent': 'סוגי אירועים'},
+            {'name': 'יום הולדת', 'parent': 'סוגי אירועים'},
+            {'name': 'אירוע עסקי', 'parent': 'סוגי אירועים'},
+            {'name': 'אחר', 'parent': 'סוגי אירועים'}
         ]
         
         for sub_cat_data in default_sub_categories:
