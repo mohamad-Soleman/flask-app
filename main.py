@@ -3,7 +3,9 @@ from extensions import db, jwt
 from auth import auth_bp
 from orders import order_bp
 from users import user_bp
-from models import User, TokenBlocklist, generate_uuid
+from categories import category_bp
+from sub_categories import sub_category_bp
+from models import User, TokenBlocklist, Categories, SubCategories, generate_uuid
 from flask_cors import CORS
 import os
 
@@ -45,10 +47,57 @@ def create_app():
         else:
             print("Admin user already exists.")
 
+        # Create default categories if not exists
+        default_categories = [
+            'חתונה',
+            'אירוסין',
+            'יום הולדת'
+        ]
+        
+        for category_name in default_categories:
+            if not Categories.get_by_name(category_name):
+                category = Categories(
+                    name=category_name,
+                    isActive=True,
+                    createdBy='admin'
+                )
+                category.set_id()
+                category.save()
+                print(f"Default category '{category_name}' created.")
+            else:
+                print(f"Category '{category_name}' already exists.")
+
+        # Create default sub-categories if not exists
+        default_sub_categories = [
+            {'name': 'חתונה אשכנזית', 'parent': 'חתונה'},
+            {'name': 'חתונה ספרדית', 'parent': 'חתונה'},
+            {'name': 'אירוסין פשוטים', 'parent': 'אירוסין'},
+            {'name': 'אירוסין מפוארים', 'parent': 'אירוסין'},
+            {'name': 'יום הולדת ילדים', 'parent': 'יום הולדת'},
+            {'name': 'יום הולדת מבוגרים', 'parent': 'יום הולדת'}
+        ]
+        
+        for sub_cat_data in default_sub_categories:
+            parent_category = Categories.get_by_name(sub_cat_data['parent'])
+            if parent_category and not SubCategories.get_by_name_and_parent(sub_cat_data['name'], parent_category.id):
+                sub_category = SubCategories(
+                    name=sub_cat_data['name'],
+                    parent_category_id=parent_category.id,
+                    isActive=True,
+                    createdBy='admin'
+                )
+                sub_category.set_id()
+                sub_category.save()
+                print(f"Default sub-category '{sub_cat_data['name']}' created under '{sub_cat_data['parent']}'.")
+            elif parent_category:
+                print(f"Sub-category '{sub_cat_data['name']}' already exists under '{sub_cat_data['parent']}'.")
+
     # register bluepints
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(user_bp, url_prefix="/users")
     app.register_blueprint(order_bp, url_prefix="/orders")
+    app.register_blueprint(category_bp, url_prefix="/categories")
+    app.register_blueprint(sub_category_bp, url_prefix="/sub-categories")
 
     # Add a root route
     @app.route('/')

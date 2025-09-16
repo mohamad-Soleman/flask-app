@@ -85,3 +85,81 @@ class Orders(db.Model):
 
     def update(self):
         db.session.commit()
+
+
+class Categories(db.Model):
+    __tablename__ = 'categories'
+
+    id = db.Column(db.String(), primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    isActive = db.Column(db.Boolean(), nullable=False, default=True)
+    createdBy = db.Column(db.String(), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<Category {self.name}>"
+
+    def set_id(self):
+        self.id = str(generate_uuid())
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def update(self):
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    @classmethod
+    def get_all_active(cls):
+        return cls.query.filter_by(isActive=True).all()
+
+    @classmethod
+    def get_by_name(cls, name):
+        return cls.query.filter_by(name=name, isActive=True).first()
+
+
+class SubCategories(db.Model):
+    __tablename__ = 'sub_categories'
+
+    id = db.Column(db.String(), primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    parent_category_id = db.Column(db.String(), db.ForeignKey('categories.id'), nullable=False)
+    isActive = db.Column(db.Boolean(), nullable=False, default=True)
+    createdBy = db.Column(db.String(), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationship to parent category
+    parent_category = db.relationship('Categories', backref='sub_categories')
+
+    def __repr__(self):
+        return f"<SubCategory {self.name}>"
+
+    def set_id(self):
+        self.id = str(generate_uuid())
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def update(self):
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    @classmethod
+    def get_all_active(cls):
+        return cls.query.filter_by(isActive=True).all()
+
+    @classmethod
+    def get_by_name_and_parent(cls, name, parent_category_id):
+        return cls.query.filter_by(name=name, parent_category_id=parent_category_id, isActive=True).first()
+
+    @classmethod
+    def get_by_parent_category(cls, parent_category_id):
+        return cls.query.filter_by(parent_category_id=parent_category_id, isActive=True).all()

@@ -85,3 +85,38 @@ class UpdateOrderSchema(Schema):
     def validate_guests(self, data, **kwargs):
         if data['minGuests'] > data['maxGuests']:
             raise ValidationError("minGuests cannot be greater than maxGuests", field_name="minGuests")
+
+
+class AddCategorySchema(Schema):
+    id = fields.String(dump_only=True)
+    name = fields.Str(required=True, validate=validate.Length(min=1, max=100))
+    
+    class Meta:
+        unknown = EXCLUDE
+
+
+class GetCategorySchema(Schema):
+    id = fields.String()
+    name = fields.String()
+    isActive = fields.Boolean()
+    createdBy = fields.String()
+    created_at = fields.DateTime()
+
+
+class AddSubCategorySchema(Schema):
+    id = fields.String(dump_only=True)
+    name = fields.Str(required=True, validate=validate.Length(min=1, max=100))
+    parent_category_id = fields.Str(required=True)
+    
+    class Meta:
+        unknown = EXCLUDE
+
+
+class GetSubCategorySchema(Schema):
+    id = fields.String()
+    name = fields.String()
+    parent_category_id = fields.String()
+    parent_category_name = fields.String()
+    isActive = fields.Boolean()
+    createdBy = fields.String()
+    created_at = fields.DateTime()
