@@ -17,7 +17,7 @@ def create_app():
     # Configure CORS to allow credentials (cookies) with more permissive settings for development
     CORS(app,
          supports_credentials=True,
-         origins=['http://localhost:4200', 'http://127.0.0.1:4200', 'https://flourishing-sherbet-79ac5a.netlify.app'],
+         origins=['http://localhost:4200', 'http://127.0.0.1:4200', 'https://angular-auth-app-4lnm.onrender.com'],
          allow_headers=['Content-Type', 'Authorization'],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 
