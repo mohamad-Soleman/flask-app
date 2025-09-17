@@ -19,7 +19,8 @@ def create_app():
          supports_credentials=True,
          origins=['http://localhost:4200', 'http://127.0.0.1:4200', 'https://angular-auth-app-4lnm.onrender.com'],
          allow_headers=['Content-Type', 'Authorization'],
-         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
+         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+         expose_headers=["Content-Type", "Authorization", "Set-Cookie"])
 
     app.config.from_prefixed_env()
     
@@ -30,6 +31,8 @@ def create_app():
     app.config['JWT_REFRESH_COOKIE_NAME'] = 'refresh_token'
     app.config['JWT_HEADER_NAME'] = 'Authorization'
     app.config['JWT_HEADER_TYPE'] = 'Bearer'
+    app.config["JWT_COOKIE_SECURE"] = True  # required for HTTPS on Render
+    app.config["JWT_COOKIE_SAMESITE"] = "None"  # allow cross-site cookies
 
     # initialize exts
     db.init_app(app)
