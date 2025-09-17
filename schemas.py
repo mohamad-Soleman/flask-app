@@ -120,3 +120,46 @@ class GetSubCategorySchema(Schema):
     isActive = fields.Boolean()
     createdBy = fields.String()
     created_at = fields.DateTime()
+
+
+class AddOrderMenuItemSchema(Schema):
+    sub_category_id = fields.Str(required=True)
+    quantity = fields.Int(required=True, validate=validate.Range(min=1))
+    notes = fields.Str(allow_none=True)
+    
+    class Meta:
+        unknown = EXCLUDE
+
+
+class UpdateOrderMenuSchema(Schema):
+    order_id = fields.Str(required=True)
+    menu_items = fields.List(fields.Nested(AddOrderMenuItemSchema), required=True)
+    
+    class Meta:
+        unknown = EXCLUDE
+
+
+class GetOrderMenuItemSchema(Schema):
+    id = fields.String()
+    order_id = fields.String()
+    sub_category_id = fields.String()
+    sub_category_name = fields.String()
+    parent_category_name = fields.String()
+    quantity = fields.Integer()
+    notes = fields.String(allow_none=True)
+    created_at = fields.DateTime()
+    updated_at = fields.DateTime()
+
+
+class GetOrderMenuSchema(Schema):
+    order_id = fields.String()
+    order_info = fields.Dict()  # Will contain basic order details
+    menu_items = fields.List(fields.Nested(GetOrderMenuItemSchema))
+    total_items = fields.Integer()
+
+
+class DeleteOrderMenuItemSchema(Schema):
+    id = fields.String(required=True)
+    
+    class Meta:
+        unknown = EXCLUDE

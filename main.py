@@ -5,7 +5,8 @@ from orders import order_bp
 from users import user_bp
 from categories import category_bp
 from sub_categories import sub_category_bp
-from models import User, TokenBlocklist, Categories, SubCategories, generate_uuid
+from order_menu import order_menu_bp
+from models import User, TokenBlocklist, Categories, SubCategories, OrderMenu, generate_uuid
 from flask_cors import CORS
 import os
 
@@ -79,7 +80,92 @@ def create_app():
             {'name': 'אירוסין', 'parent': 'סוגי אירועים'},
             {'name': 'יום הולדת', 'parent': 'סוגי אירועים'},
             {'name': 'אירוע עסקי', 'parent': 'סוגי אירועים'},
-            {'name': 'אחר', 'parent': 'סוגי אירועים'}
+            {'name': 'אחר', 'parent': 'סוגי אירועים'},
+
+            {"name": "حمص", "parent": "سلطات"},
+            {"name": "حمص / طحينة مع مقدونس", "parent": "سلطات"},
+            {"name": "تبولة", "parent": "سلطات"},
+            {"name": "بابا غنوج يوناني", "parent": "سلطات"},
+            {"name": "بابا غنوج مع باذنجان", "parent": "سلطات"},
+            {"name": "لبنة زعتر", "parent": "سلطات"},
+            {"name": "لبنة مدخنة", "parent": "سلطات"},
+            {"name": "ذرة", "parent": "سلطات"},
+            {"name": "فلفل آسيوي", "parent": "سلطات"},
+            {"name": "شمندر", "parent": "سلطات"},
+            {"name": "فتوش", "parent": "سلطات"},
+            {"name": "باستا", "parent": "سلطات"},
+            {"name": "زيتون", "parent": "سلطات"},
+            {"name": "نوجة", "parent": "سلطات"},
+            {"name": "سلطة دجاج بونتاي", "parent": "سلطات"},
+            {"name": "سلطة مع كسبرات", "parent": "سلطات"},
+            {"name": "سلطة سيزر", "parent": "سلطات"},
+            {"name": "سلطة كينوا", "parent": "سلطات"},
+            {"name": "سلطة كول سلو", "parent": "سلطات"},
+            {"name": "باذنجان مغربي حار", "parent": "سلطات"},
+            {"name": "باذنجان مع صلصة", "parent": "سلطات"},
+            {"name": "باذنجان رومانيا", "parent": "سلطات"},
+            {"name": "باذنجان مع صنوبر", "parent": "سلطات"},
+
+            {"name": "بطيخ مع لبنة", "parent": "سلطات موسمية"},
+            {"name": "رمان", "parent": "سلطات موسمية"},
+            {"name": "أفوكادو", "parent": "سلطات موسمية"},
+            {"name": "مانجو", "parent": "سلطات موسمية"},
+
+            {"name": "سلطة شعير ألوان / عادي", "parent": "سلطات اكسترا"},
+            {"name": "سوشيما", "parent": "سلطات اكسترا"},
+            {"name": "بوراتا", "parent": "سلطات اكسترا"},
+            {"name": "فالودا", "parent": "سلطات اكسترا"},
+            {"name": "سلطة كانلونس", "parent": "سلطات اكسترا"},
+            {"name": "سلطة بير موتزاريلا", "parent": "سلطات اكسترا"},
+
+            {"name": "مقبلات مقرمشة", "parent": "وجبات اولى ساخنة"},
+            {"name": "مقلي مشروم إسباني", "parent": "وجبات اولى ساخنة"},
+            {"name": "مقلي هامي مطبوخ", "parent": "وجبات اولى ساخنة"},
+            {"name": "أرنشيني كرات", "parent": "وجبات اولى ساخنة"},
+            {"name": "إغورول سلمون", "parent": "وجبات اولى ساخنة"},
+            {"name": "ريفولي مقلي", "parent": "وجبات اولى ساخنة"},
+            {"name": "رؤوس كالاماري مقلية", "parent": "وجبات اولى ساخنة"},
+            {"name": "صينية موتزاريلا", "parent": "وجبات اولى ساخنة"},
+            {"name": "سبانيسكو", "parent": "وجبات اولى ساخنة"},
+            {"name": "صدر دجاج إسبانش / بريت", "parent": "وجبات اولى ساخنة"},
+            {"name": "كفتة جاج", "parent": "وجبات اولى ساخنة"},
+            {"name": "كباب سيخ فرقة", "parent": "وجبات اولى ساخنة"},
+
+            {"name": "سيخ شريحت", "parent": "وجبات اولية"},
+            {"name": "سيخ كروف", "parent": "وجبات اولية"},
+            {"name": "ضلع كروف", "parent": "وجبات اولية"},
+            {"name": "أجنحة دجاج", "parent": "وجبات اولية"},
+            {"name": "أنتركوت", "parent": "وجبات اولية"},
+            {"name": "فيليه تليو / يسطوري", "parent": "وجبات اولية"},
+            {"name": "سيخ سلمون / يسطوري", "parent": "وجبات اولية"},
+
+            {"name": "أضلاع كروف", "parent": "وجبات رئيسية"},
+            {"name": "فيليه عجل", "parent": "وجبات رئيسية"},
+            {"name": "ستيك تليو", "parent": "وجبات رئيسية"},
+            {"name": "أضلاع دجاج", "parent": "وجبات رئيسية"},
+            {"name": "أنتركوت", "parent": "وجبات رئيسية"},
+            {"name": "فيليه سلمون", "parent": "وجبات رئيسية"},
+            {"name": "ستيك عجل", "parent": "وجبات رئيسية"},
+            {"name": "فيليه براك", "parent": "وجبات رئيسية"},
+            {"name": "صدر دجاج محشي", "parent": "وجبات رئيسية"},
+            {"name": "فيليه سمك مقلي", "parent": "وجبات رئيسية"},
+            {"name": "سيخ بريت", "parent": "وجبات رئيسية"},
+
+            {"name": "أضلاع كروف تاج", "parent": "وجبات رئيسية مميزة"},
+            {"name": "دجاج أورز", "parent": "وجبات رئيسية مميزة"},
+            {"name": "دجاج دورة رز", "parent": "وجبات رئيسية مميزة"},
+            {"name": "فيليه عجل", "parent": "وجبات رئيسية مميزة"},
+            {"name": "ريفة كروف", "parent": "وجبات رئيسية مميزة"},
+            {"name": "كتف كروف", "parent": "وجبات رئيسية مميزة"},
+            {"name": "كروف كامل محشي", "parent": "وجبات رئيسية مميزة"},
+
+            {"name": "كاماري لينة", "parent": "وجبات مميزة"},
+            {"name": "شرمس بيسنو", "parent": "وجبات مميزة"},
+            {"name": "شرمس / كاماري", "parent": "وجبات مميزة"},
+            {"name": "اسكالوب", "parent": "وجبات مميزة"},
+            {"name": "ستيك تليو", "parent": "وجبات مميزة"},
+            {"name": "دجاج شيش كباب", "parent": "وجبات مميزة"},
+            {"name": "سوسيس سلمون", "parent": "وجبات مميزة"}
         ]
         
         for sub_cat_data in default_sub_categories:
@@ -103,6 +189,7 @@ def create_app():
     app.register_blueprint(order_bp, url_prefix="/orders")
     app.register_blueprint(category_bp, url_prefix="/categories")
     app.register_blueprint(sub_category_bp, url_prefix="/sub-categories")
+    app.register_blueprint(order_menu_bp, url_prefix="/order-menu")
 
     # Add a root route
     @app.route('/')
