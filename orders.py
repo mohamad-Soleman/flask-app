@@ -44,7 +44,28 @@ def add_new_order():
     new_order.set_id()
     new_order.save()
 
-    return jsonify({"message": "Order created"}), 201
+    return jsonify({
+        "message": "Order created",
+        "success": True,
+        "order_id": new_order.id
+    }), 201
+
+@order_bp.get("/<order_id>")
+@jwt_required()
+def get_order_by_id(order_id):
+    claims = get_jwt()
+    order = Orders.query.get(order_id)
+    
+    if not order or not order.isActive:
+        return jsonify({"success": False, "message": "Order not found"}), 404
+    
+    # Use appropriate schema based on admin status
+    order_schema = GetOrderNonAdminSchema()
+    if claims.get("is_admin") == True:
+        order_schema = GetOrderSchema()
+    
+    result = order_schema.dump(order)
+    return jsonify({"success": True, "message": "Order found", "data": result}), 200
 
 @order_bp.get("/getorders")
 @jwt_required()

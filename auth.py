@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, make_response
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
@@ -8,6 +8,8 @@ from flask_jwt_extended import (
     get_jwt_identity,
 )
 from models import User, TokenBlocklist
+from datetime import timedelta
+import os
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -46,15 +48,31 @@ def login_user():
         access_token = create_access_token(identity=user.username,additional_claims=additional_claims)
         refresh_token = create_refresh_token(identity=user.username,additional_claims=additional_claims)
 
-        return (
-            jsonify(
-                {
-                    "message": "Logged In ",
-                    "tokens": {"access": access_token, "refresh": refresh_token},
-                }
-            ),
-            200,
+        response = make_response(jsonify({"message": "Logged In"}))
+        
+        # Check if we're in production (secure cookies only for HTTPS)
+        is_production = os.getenv('FLASK_ENV') == 'production' or os.getenv('ENVIRONMENT') == 'production'
+        
+        # Set cookies with environment-appropriate security settings
+        response.set_cookie(
+            'access_token',
+            access_token,
+            max_age=timedelta(hours=1),
+            httponly=True,
+            secure=is_production,  # Use HTTPS only in production
+            samesite='None' if is_production else 'Lax'  # Cross-origin for production
         )
+        
+        response.set_cookie(
+            'refresh_token',
+            refresh_token,
+            max_age=timedelta(days=30),
+            httponly=True,
+            secure=is_production,  # Use HTTPS only in production
+            samesite='None' if is_production else 'Lax'  # Cross-origin for production
+        )
+        
+        return response, 200
 
     return jsonify({"error": "Invalid username or password"}), 400
 
@@ -68,6 +86,7 @@ def whoami():
             "user_details": {
                 "username": current_user.username,
                 "email": current_user.email,
+                "is_admin": current_user.isAdmin,
             },
         }
     )
@@ -91,7 +110,23 @@ def refresh_access():
 
     new_access_token = create_access_token(identity=identity,additional_claims=additional_claims)
 
-    return jsonify({"access_token": new_access_token})
+    response = make_response(jsonify({"access_token": new_access_token}))
+    
+    # Check if we're in production
+    is_production = os.getenv('FLASK_ENV') == 'production' or os.getenv('ENVIRONMENT') == 'production'
+    
+    # Set new access token cookie
+    response.set_cookie(
+        'access_token',
+        new_access_token,
+        # max_age=timedelta(hours=1),
+        max_age=timedelta(hours=1),
+        httponly=True,
+        secure=is_production,
+        samesite='None' if is_production else 'Lax'
+    )
+    
+    return response
 
 
 @auth_bp.get('/logout')
@@ -106,5 +141,28 @@ def logout_user():
 
     token_b.save()
 
-    return jsonify({"message": f"{token_type} token revoked successfully"}) , 200
+    response = make_response(jsonify({"message": f"{token_type} token revoked successfully"}))
+    
+    # Check if we're in production
+    is_production = os.getenv('FLASK_ENV') == 'production' or os.getenv('ENVIRONMENT') == 'production'
+    
+    # Clear cookies with appropriate settings
+    response.set_cookie(
+        'access_token',
+        '',
+        expires=0,
+        httponly=True,
+        secure=is_production,
+        samesite='None' if is_production else 'Lax'
+    )
+    response.set_cookie(
+        'refresh_token',
+        '',
+        expires=0,
+        httponly=True,
+        secure=is_production,
+        samesite='None' if is_production else 'Lax'
+    )
+
+    return response, 200
 
