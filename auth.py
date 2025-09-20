@@ -65,7 +65,7 @@ def login_user():
             httponly=True,
             secure=is_production,
             samesite='None' if is_production else 'Lax',
-            domain=cookie_domain,
+            domain=".onrender.com",
             path='/'
         )
 
@@ -76,7 +76,7 @@ def login_user():
             httponly=True,
             secure=is_production,
             samesite='None' if is_production else 'Lax',
-            domain=cookie_domain,
+            domain=".onrender.com",
             path='/'
         )
 
