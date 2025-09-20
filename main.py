@@ -9,11 +9,25 @@ from order_menu import order_menu_bp
 from models import User, TokenBlocklist, Categories, SubCategories, OrderMenu, generate_uuid
 from flask_cors import CORS
 import os
+import logging
 
 
 def create_app():
     app = Flask(__name__)
     app.config.from_prefixed_env()
+
+    # Get domain from environment variable with fallback
+    cookie_domain = os.getenv('JWT_COOKIE_DOMAIN', '.dunyazad.site')
+    cors_origins = os.getenv('CORS_ORIGINS', 'http://localhost:4200,http://127.0.0.1:4200,https://angular-auth-app-4lnm.onrender.com,https://dunyazad.site')
+    
+    # Configure logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+    
+    # Log domain configuration for debugging
+    logger.info(f"JWT Cookie Domain: {cookie_domain}")
+    logger.info(f"CORS Origins: {cors_origins}")
+    logger.info(f"Environment: {os.getenv('FLASK_ENV', 'development')}")
 
     # Configure JWT to read tokens from cookies AND headers (fallback)
     app.config['JWT_TOKEN_LOCATION'] = ['cookies', 'headers']
@@ -24,13 +38,14 @@ def create_app():
     app.config['JWT_HEADER_TYPE'] = 'Bearer'
     app.config["JWT_COOKIE_SECURE"] = True  # required for HTTPS on Render
     app.config["JWT_COOKIE_SAMESITE"] = "None"  # allow cross-site cookies
-    app.config["JWT_COOKIE_DOMAIN"] = ".onrender.com"
+    app.config["JWT_COOKIE_DOMAIN"] = cookie_domain
 
 
     # Configure CORS to allow credentials (cookies) with more permissive settings for development
+    cors_origins_list = [origin.strip() for origin in cors_origins.split(',')]
     CORS(app,
          supports_credentials=True,
-         origins=['http://localhost:4200', 'http://127.0.0.1:4200', 'https://angular-auth-app-4lnm.onrender.com'],
+         origins=cors_origins_list,
          allow_headers=['Content-Type', 'Authorization'],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
          expose_headers=["Content-Type", "Authorization", "Set-Cookie"])

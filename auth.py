@@ -10,8 +10,12 @@ from flask_jwt_extended import (
 from models import User, TokenBlocklist
 from datetime import timedelta
 import os
+import logging
 
 auth_bp = Blueprint("auth", __name__)
+
+# Get logger for debugging
+logger = logging.getLogger(__name__)
 
 
 @auth_bp.post("/register")
@@ -56,7 +60,11 @@ def login_user():
         response = make_response(jsonify({"message": "Logged In"}))
 
         is_production = os.getenv('FLASK_ENV') == 'production' or os.getenv('ENVIRONMENT') == 'production'
-        cookie_domain = ".onrender.com"
+        cookie_domain = os.getenv('JWT_COOKIE_DOMAIN', '.dunyazad.site')
+        
+        # Log domain configuration for debugging
+        logger.info(f"Login - JWT Cookie Domain: {cookie_domain}")
+        logger.info(f"Login - Production mode: {is_production}")
 
         response.set_cookie(
             'access_token',
@@ -65,7 +73,7 @@ def login_user():
             httponly=True,
             secure=is_production,
             samesite='None' if is_production else 'Lax',
-            domain=".onrender.com",
+            domain=cookie_domain,
             path='/'
         )
 
@@ -76,7 +84,7 @@ def login_user():
             httponly=True,
             secure=is_production,
             samesite='None' if is_production else 'Lax',
-            domain=".onrender.com",
+            domain=cookie_domain,
             path='/'
         )
 
@@ -117,7 +125,11 @@ def refresh_access():
     response = make_response(jsonify({"access_token": new_access_token}))
 
     is_production = os.getenv('FLASK_ENV') == 'production' or os.getenv('ENVIRONMENT') == 'production'
-    cookie_domain = ".onrender.com"
+    cookie_domain = os.getenv('JWT_COOKIE_DOMAIN', '.dunyazad.site')
+    
+    # Log domain configuration for debugging
+    logger.info(f"Refresh - JWT Cookie Domain: {cookie_domain}")
+    logger.info(f"Refresh - Production mode: {is_production}")
 
     response.set_cookie(
         'access_token',
@@ -147,7 +159,11 @@ def logout_user():
     response = make_response(jsonify({"message": f"{token_type} token revoked successfully"}))
 
     is_production = os.getenv('FLASK_ENV') == 'production' or os.getenv('ENVIRONMENT') == 'production'
-    cookie_domain = ".onrender.com"
+    cookie_domain = os.getenv('JWT_COOKIE_DOMAIN', '.dunyazad.site')
+    
+    # Log domain configuration for debugging
+    logger.info(f"Logout - JWT Cookie Domain: {cookie_domain}")
+    logger.info(f"Logout - Production mode: {is_production}")
 
     response.set_cookie(
         'access_token',
