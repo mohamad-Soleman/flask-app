@@ -33,7 +33,7 @@ def create_app():
     app.config['JWT_HEADER_TYPE'] = 'Bearer'
     app.config["JWT_COOKIE_SECURE"] = True  # required for HTTPS on Render
     app.config["JWT_COOKIE_SAMESITE"] = "None"  # allow cross-site cookies
-    app.config['JWT_COOKIE_DOMAIN'] = ".onrender.com"
+    app.config["JWT_COOKIE_DOMAIN"] = ".onrender.com"
 
     # initialize exts
     db.init_app(app)
