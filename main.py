@@ -13,17 +13,8 @@ import os
 
 def create_app():
     app = Flask(__name__)
-    
-    # Configure CORS to allow credentials (cookies) with more permissive settings for development
-    CORS(app,
-         supports_credentials=True,
-         origins=['http://localhost:4200', 'http://127.0.0.1:4200', 'https://angular-auth-app-4lnm.onrender.com'],
-         allow_headers=['Content-Type', 'Authorization'],
-         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-         expose_headers=["Content-Type", "Authorization", "Set-Cookie"])
-
     app.config.from_prefixed_env()
-    
+
     # Configure JWT to read tokens from cookies AND headers (fallback)
     app.config['JWT_TOKEN_LOCATION'] = ['cookies', 'headers']
     app.config['JWT_COOKIE_CSRF_PROTECT'] = False  # Disable CSRF for simplicity
@@ -34,6 +25,15 @@ def create_app():
     app.config["JWT_COOKIE_SECURE"] = True  # required for HTTPS on Render
     app.config["JWT_COOKIE_SAMESITE"] = "None"  # allow cross-site cookies
     app.config["JWT_COOKIE_DOMAIN"] = ".onrender.com"
+
+
+    # Configure CORS to allow credentials (cookies) with more permissive settings for development
+    CORS(app,
+         supports_credentials=True,
+         origins=['http://localhost:4200', 'http://127.0.0.1:4200', 'https://angular-auth-app-4lnm.onrender.com'],
+         allow_headers=['Content-Type', 'Authorization'],
+         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+         expose_headers=["Content-Type", "Authorization", "Set-Cookie"])
 
     # initialize exts
     db.init_app(app)
