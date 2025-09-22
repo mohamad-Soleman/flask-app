@@ -62,6 +62,7 @@ class Orders(db.Model):
     full_name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(20), nullable=False)
     another_phone = db.Column(db.String(20), nullable=True)
+    another_name = db.Column(db.String(100), nullable=True)
     price = db.Column(db.Float, nullable=False)
     min_guests = db.Column(db.Integer, nullable=False)
     max_guests = db.Column(db.Integer, nullable=False)
@@ -72,6 +73,7 @@ class Orders(db.Model):
     paid_amount = db.Column(db.Float, nullable=False)
     order_type = db.Column(db.String(50), nullable=False)
     comments = db.Column(db.Text, nullable=True)
+    extras = db.Column(db.Text, nullable=True)  # JSON string of selected extras
     isActive = db.Column(db.Boolean(), nullable=False)
     createdBy = db.Column(db.String(), nullable=False)
 

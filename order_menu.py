@@ -9,6 +9,7 @@ from schemas import (
 )
 from marshmallow import ValidationError
 from extensions import db
+from datetime import datetime, timedelta
 
 order_menu_bp = Blueprint("order_menu", __name__)
 
@@ -48,7 +49,8 @@ def update_order_menu():
         if not order or not order.isActive:
             return jsonify({"success": False, "message": "Order not found"}), 404
 
-        # Delete existing menu items and meta for this order
+        # Soft delete existing menu items and meta for this order
+        print(f"Soft deleting existing menu items for order: {order_id}")
         OrderMenu.delete_by_order_id(order_id)
         OrderMenuMeta.delete_by_order_id(order_id)
 
@@ -72,15 +74,65 @@ def update_order_menu():
             menu_item.save()
             created_items.append(menu_item)
 
-        # Save general notes if provided
+        # Handle general notes - check if meta already exists and update, otherwise create
         if general_notes:
-            menu_meta = OrderMenuMeta(
-                order_id=order_id,
-                general_notes=general_notes,
-                createdBy=current_user.username
-            )
-            menu_meta.set_id()
-            menu_meta.save()
+            print(f"Handling general notes for order: {order_id}")
+            # Check if meta already exists (even if soft-deleted)
+            existing_meta = OrderMenuMeta.query.filter_by(order_id=order_id).first()
+            if existing_meta:
+                print(f"Updating existing menu meta for order: {order_id}")
+                existing_meta.general_notes = general_notes
+                existing_meta.isActive = True
+                existing_meta.updated_at = db.func.now()
+                existing_meta.save()
+                print(f"Successfully updated existing menu meta for order: {order_id}")
+            else:
+                print(f"Creating new menu meta for order: {order_id}")
+                menu_meta = OrderMenuMeta(
+                    order_id=order_id,
+                    general_notes=general_notes,
+                    createdBy=current_user.username
+                )
+                menu_meta.set_id()
+                menu_meta.save()
+                print(f"Successfully created new menu meta for order: {order_id}")
+        
+        # Commit all changes first
+        db.session.commit()
+        print(f"Successfully committed all changes for order: {order_id}")
+        
+        # Now clean up inactive records for this order (hard delete) - AUTOMATIC CLEANUP
+        print(f"Starting automatic cleanup for order: {order_id}")
+        try:
+            # Hard delete inactive menu items for this order
+            inactive_menu_items = OrderMenu.query.filter_by(order_id=order_id, isActive=False).all()
+            deleted_items_count = 0
+            for item in inactive_menu_items:
+                db.session.delete(item)
+                deleted_items_count += 1
+            print(f"Hard deleted {deleted_items_count} inactive menu items for order: {order_id}")
+            
+            # Hard delete inactive menu meta for this order
+            inactive_menu_meta = OrderMenuMeta.query.filter_by(order_id=order_id, isActive=False).all()
+            deleted_meta_count = 0
+            for meta in inactive_menu_meta:
+                db.session.delete(meta)
+                deleted_meta_count += 1
+            print(f"Hard deleted {deleted_meta_count} inactive menu meta for order: {order_id}")
+            
+            # Commit the cleanup
+            db.session.commit()
+            print(f"✅ Automatic cleanup completed for order {order_id}: {deleted_items_count} items, {deleted_meta_count} meta records")
+            
+            # Optional: Also clean up any orphaned inactive records (records without active counterparts)
+            _cleanup_orphaned_inactive_records()
+            
+        except Exception as cleanup_error:
+            print(f"⚠️ Warning: Error during automatic cleanup for order {order_id}: {cleanup_error}")
+            # Don't fail the main operation if cleanup fails
+            db.session.rollback()
+            # Re-commit the main changes
+            db.session.commit()
 
         return jsonify({
             "success": True,
@@ -229,3 +281,49 @@ def check_order_has_menu(order_id):
                 "item_count": 0
             }
         }), 500
+
+
+
+
+def _cleanup_orphaned_inactive_records():
+    """Helper function to clean up orphaned inactive records"""
+    try:
+        print("🧹 Starting orphaned records cleanup...")
+        
+        # Find inactive menu items that have no active counterparts
+        orphaned_items = db.session.query(OrderMenu).filter(
+            OrderMenu.isActive == False,
+            ~OrderMenu.order_id.in_(
+                db.session.query(OrderMenu.order_id).filter(OrderMenu.isActive == True)
+            )
+        ).all()
+        
+        # Find inactive menu meta that have no active counterparts
+        orphaned_meta = db.session.query(OrderMenuMeta).filter(
+            OrderMenuMeta.isActive == False,
+            ~OrderMenuMeta.order_id.in_(
+                db.session.query(OrderMenuMeta.order_id).filter(OrderMenuMeta.isActive == True)
+            )
+        ).all()
+        
+        # Delete orphaned records
+        orphaned_items_count = 0
+        for item in orphaned_items:
+            db.session.delete(item)
+            orphaned_items_count += 1
+            
+        orphaned_meta_count = 0
+        for meta in orphaned_meta:
+            db.session.delete(meta)
+            orphaned_meta_count += 1
+        
+        if orphaned_items_count > 0 or orphaned_meta_count > 0:
+            db.session.commit()
+            print(f"🧹 Cleaned up {orphaned_items_count} orphaned menu items and {orphaned_meta_count} orphaned meta records")
+        else:
+            print("🧹 No orphaned records found")
+            
+    except Exception as e:
+        print(f"⚠️ Error during orphaned records cleanup: {e}")
+        db.session.rollback()
+
