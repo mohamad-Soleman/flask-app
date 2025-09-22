@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt , current_user
+import json
 
 from models import Orders
 from schemas import AddOrderSchema, GetOrderSchema, GetOrderByDatesInputSchema, GetOrderNonAdminSchema, \
@@ -23,10 +24,26 @@ def add_new_order():
     except ValidationError as err:
         return jsonify({"errors": err.messages}), 400
 
+    # Process extras data
+    extras_data = data.get('extras', [])
+    print(f"DEBUG - Raw extras data: {extras_data}")
+    print(f"DEBUG - Extras type: {type(extras_data)}")
+    
+    if extras_data:
+        if isinstance(extras_data, list):
+            extras_json = json.dumps(extras_data)
+        else:
+            extras_json = json.dumps([extras_data])
+    else:
+        extras_json = None
+    
+    print(f"DEBUG - JSON to store: {extras_json}")
+    
     new_order = Orders(
         full_name=data['fullName'],
         phone=data['phone'],
         another_phone=data.get('anotherPhone'),
+        another_name=data.get('anotherName'),
         price=data['price'],
         min_guests=data['minGuests'],
         max_guests=data['maxGuests'],
@@ -37,6 +54,7 @@ def add_new_order():
         paid_amount=data['paidAmount'],
         order_type=data['orderType'],
         comments=data.get('comments'),
+        extras=extras_json,
         createdBy=current_user.username,
         isActive=True
     )
@@ -112,9 +130,25 @@ def edit_order():
 
     order = Orders.query.get(data["id"])
     if order:
+        # Process extras data
+        extras_data = data.get('extras', [])
+        print(f"DEBUG EDIT - Raw extras data: {extras_data}")
+        print(f"DEBUG EDIT - Extras type: {type(extras_data)}")
+        
+        if extras_data:
+            if isinstance(extras_data, list):
+                extras_json = json.dumps(extras_data)
+            else:
+                extras_json = json.dumps([extras_data])
+        else:
+            extras_json = None
+        
+        print(f"DEBUG EDIT - JSON to store: {extras_json}")
+        
         order.full_name = data['fullName']
         order.phone = data['phone']
         order.another_phone = data.get('anotherPhone')
+        order.another_name = data.get('anotherName')
         order.price = data['price']
         order.min_guests = data['minGuests']
         order.max_guests = data['maxGuests']
@@ -125,6 +159,7 @@ def edit_order():
         order.paid_amount = data['paidAmount']
         order.order_type = data['orderType']
         order.comments = data.get('comments')
+        order.extras = extras_json
     else:
         return {"message": "Order not found"}, 404
 

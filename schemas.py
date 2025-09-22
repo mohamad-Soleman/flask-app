@@ -11,6 +11,7 @@ class AddOrderSchema(Schema):
     fullName = fields.Str(required=True, validate=validate.Length(min=5))
     phone = fields.Str(required=True, validate=validate.Length(min=10))
     anotherPhone = fields.Str(required=False, allow_none=True)
+    anotherName = fields.Str(required=False, allow_none=True)
     price = fields.Float(required=True)
     minGuests = fields.Int(required=True)
     maxGuests = fields.Int(required=True)
@@ -21,6 +22,7 @@ class AddOrderSchema(Schema):
     paidAmount = fields.Float(required=True)
     orderType = fields.Str(required=True)
     comments = fields.Str(allow_none=True)
+    extras = fields.List(fields.Str(), required=False, allow_none=True)
 
     @validates_schema
     def validate_guests(self, data, **kwargs):
@@ -32,6 +34,7 @@ class GetOrderSchema(Schema):
     full_name = fields.String()
     phone = fields.String()
     another_phone = fields.String(allow_none=True)
+    another_name = fields.String(allow_none=True)
     price = fields.Float()
     min_guests = fields.Integer()
     max_guests = fields.Integer()
@@ -42,12 +45,54 @@ class GetOrderSchema(Schema):
     paid_amount = fields.Float()
     order_type = fields.String()
     comments = fields.String(allow_none=True)
+    extras = fields.Method("get_extras")
+    
+    def get_extras(self, obj):
+        if obj.extras:
+            print(f"DEBUG SCHEMA - Raw extras from DB: {repr(obj.extras)}")
+            try:
+                import json
+                # First try normal JSON parsing
+                parsed = json.loads(obj.extras)
+                print(f"DEBUG SCHEMA - Successfully parsed: {parsed}")
+                return parsed if isinstance(parsed, list) else []
+            except (json.JSONDecodeError, TypeError, ValueError) as e:
+                print(f"DEBUG SCHEMA - JSON parse failed: {e}")
+                # If JSON parsing fails, try to fix malformed JSON
+                try:
+                    # Handle malformed JSON like '{"עיצוב וקישוט",צילום,אבטחה}'
+                    extras_str = str(obj.extras).strip()
+                    print(f"DEBUG SCHEMA - Processing malformed JSON: {extras_str}")
+                    
+                    # Remove outer braces if present
+                    if extras_str.startswith('{') and extras_str.endswith('}'):
+                        extras_str = extras_str[1:-1]
+                    
+                    # Split by comma and clean up
+                    items = []
+                    for item in extras_str.split(','):
+                        item = item.strip()
+                        # Remove quotes if present
+                        if item.startswith('"') and item.endswith('"'):
+                            item = item[1:-1]
+                        elif item.startswith("'") and item.endswith("'"):
+                            item = item[1:-1]
+                        if item:
+                            items.append(item)
+                    
+                    print(f"DEBUG SCHEMA - Fixed items: {items}")
+                    return items
+                except Exception as e:
+                    print(f"DEBUG SCHEMA - Fix failed: {e}")
+                    return []
+        return []
 
 class GetOrderNonAdminSchema(Schema):
     id = fields.String()
     full_name = fields.String()
     phone = fields.String()
     another_phone = fields.String(allow_none=True)
+    another_name = fields.String(allow_none=True)
     min_guests = fields.Integer()
     max_guests = fields.Integer()
     date = fields.Date()
@@ -55,6 +100,41 @@ class GetOrderNonAdminSchema(Schema):
     end_time = fields.String()
     order_type = fields.String()
     comments = fields.String(allow_none=True)
+    extras = fields.Method("get_extras")
+    
+    def get_extras(self, obj):
+        if obj.extras:
+            try:
+                import json
+                # First try normal JSON parsing
+                parsed = json.loads(obj.extras)
+                return parsed if isinstance(parsed, list) else []
+            except (json.JSONDecodeError, TypeError, ValueError):
+                # If JSON parsing fails, try to fix malformed JSON
+                try:
+                    # Handle malformed JSON like '{"עיצוב וקישוט",צילום,אבטחה}'
+                    extras_str = str(obj.extras).strip()
+                    
+                    # Remove outer braces if present
+                    if extras_str.startswith('{') and extras_str.endswith('}'):
+                        extras_str = extras_str[1:-1]
+                    
+                    # Split by comma and clean up
+                    items = []
+                    for item in extras_str.split(','):
+                        item = item.strip()
+                        # Remove quotes if present
+                        if item.startswith('"') and item.endswith('"'):
+                            item = item[1:-1]
+                        elif item.startswith("'") and item.endswith("'"):
+                            item = item[1:-1]
+                        if item:
+                            items.append(item)
+                    
+                    return items
+                except Exception:
+                    return []
+        return []
 
 class GetOrderByDatesInputSchema(Schema):
     startDate = fields.Date()
@@ -70,6 +150,7 @@ class UpdateOrderSchema(Schema):
     fullName = fields.Str(required=True, validate=validate.Length(min=5))
     phone = fields.Str(required=True, validate=validate.Length(min=10))
     anotherPhone = fields.Str(required=False, allow_none=True)
+    anotherName = fields.Str(required=False, allow_none=True)
     price = fields.Float(required=True)
     minGuests = fields.Int(required=True)
     maxGuests = fields.Int(required=True)
@@ -80,6 +161,7 @@ class UpdateOrderSchema(Schema):
     paidAmount = fields.Float(required=True)
     orderType = fields.Str(required=True)
     comments = fields.Str(allow_none=True)
+    extras = fields.List(fields.Str(), required=False, allow_none=True)
 
     @validates_schema
     def validate_guests(self, data, **kwargs):
